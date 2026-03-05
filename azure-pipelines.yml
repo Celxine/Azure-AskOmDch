@@ -1,32 +1,43 @@
 trigger:
-- main
-- dev
-- feature/e-commerce
+  - main
+  - dev
+  - feature/e-commerce
 
 pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-# Step 1: Set up Java Environment
-- task: JavaToolInstaller@0
-  inputs:
-    versionSpec: '11' # Matches your local IntelliJ version
-    jdkArchitectureOption: 'x64'
-    jdkSourceOption: 'PreInstalled'
+  # Step 1: Set up Java Environment
+  - task: JavaToolInstaller@0
+    displayName: 'Set up Java 17'
+    inputs:
+      versionSpec: '17' 
+      jdkArchitectureOption: 'x64'
+      jdkSourceOption: 'PreInstalled'
 
-# Step 2: Run Maven Tests (Selenium)
-- task: Maven@3
-  displayName: 'Run Selenium BDD Tests'
-  inputs:
-    mavenPomFile: 'pom.xml'
-    goals: 'test'
-    options: '-Dbrowser=chrome -Dheadless=true' # Optional: Pass parameters to your code
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+  # Step 2: Run Maven Tests (Selenium)
+  - task: Maven@4
+    displayName: 'Run Selenium BDD Tests'
+    inputs:
+      mavenPomFile: 'pom.xml'
+      goals: 'clean verify' 
+      options: '-Dbrowser=chrome -Dheadless=true' 
+      publishJUnitResults: true
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
 
-# Step 3: Publish Screenshots on Failure (Best Practice)
-- task: PublishTestResults@2
-  condition: succeededOrFailed()
-  inputs:
-    testResultsFormat: 'JUnit'
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+  # Step 3: Publish JUnit Test Results
+  - task: PublishTestResults@2
+    displayName: 'Publish JUnit Test Results'
+    condition: succeededOrFailed()
+    inputs:
+      testResultsFormat: 'JUnit'
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
+
+  # Step 4: Publish Cucumber HTML Report
+  - task: PublishPipelineArtifact@1
+    displayName: 'Publish Cucumber HTML Report'
+    condition: always()
+    inputs:
+      targetPath: '$(System.DefaultWorkingDirectory)/target/cucumber-html-reports'
+      artifact: 'Cucumber-HTML-Report'
+      publishLocation: 'pipeline'
