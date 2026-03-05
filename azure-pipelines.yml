@@ -1,0 +1,21 @@
+
+trigger:
+dev
+main
+-feature/e-commerce
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+task: Maven@3
+inputs:
+  mavenPomFile: 'pom.xml'
+  goals: 'test' # This runs your TestRunner and Cucumber features
+  publishJUnitResults: true
+  testResultsFiles: '*/surefire-reports/TEST-.xml'
+  javaHomeOption: 'JDKVersion'
+  jdkVersionOption: '1.11' # Or 1.17 depending on your project
+  mavenAuthenticateFeed: false
+  effectivePomSkip: false
+  sonarQubeRunAnalysis: false
