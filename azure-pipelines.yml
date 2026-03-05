@@ -1,21 +1,32 @@
-
 trigger:
-dev
-main
--feature/e-commerce
+- main
+- dev
+- feature/e-commerce
 
 pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-task: Maven@3
-inputs:
-  mavenPomFile: 'pom.xml'
-  goals: 'test' # This runs your TestRunner and Cucumber features
-  publishJUnitResults: true
-  testResultsFiles: '*/surefire-reports/TEST-.xml'
-  javaHomeOption: 'JDKVersion'
-  jdkVersionOption: '1.11' # Or 1.17 depending on your project
-  mavenAuthenticateFeed: false
-  effectivePomSkip: false
-  sonarQubeRunAnalysis: false
+# Step 1: Set up Java Environment
+- task: JavaToolInstaller@0
+  inputs:
+    versionSpec: '11' # Matches your local IntelliJ version
+    jdkArchitectureOption: 'x64'
+    jdkSourceOption: 'PreInstalled'
+
+# Step 2: Run Maven Tests (Selenium)
+- task: Maven@3
+  displayName: 'Run Selenium BDD Tests'
+  inputs:
+    mavenPomFile: 'pom.xml'
+    goals: 'test'
+    options: '-Dbrowser=chrome -Dheadless=true' # Optional: Pass parameters to your code
+    publishJUnitResults: true
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
+
+# Step 3: Publish Screenshots on Failure (Best Practice)
+- task: PublishTestResults@2
+  condition: succeededOrFailed()
+  inputs:
+    testResultsFormat: 'JUnit'
+    testResultsFiles: '**/surefire-reports/TEST-*.xml'
