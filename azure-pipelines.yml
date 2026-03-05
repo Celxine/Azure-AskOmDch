@@ -7,15 +7,23 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-  - task: JavaToolInstaller@1
+  # Step 1: Set up Java Environment
+  - task: JavaToolInstaller@0
+    displayName: 'Set up Java 17'
     inputs:
-      versionSpec: '25'
+      versionSpec: '17' 
       jdkArchitectureOption: 'x64'
       jdkSourceOption: 'PreInstalled'
 
-  - task: CmdLine@2
+  # Step 2: Run Maven Tests (Selenium)
+  - task: Maven@4
+    displayName: 'Run Selenium BDD Tests'
     inputs:
-     script: 'mvn clean test'
+      mavenPomFile: 'pom.xml'
+      goals: 'clean verify' 
+      options: '-Dbrowser=chrome -Dheadless=true' 
+      publishJUnitResults: true
+      testResultsFiles: '**/surefire-reports/TEST-*.xml'
 
   # Step 3: Publish JUnit Test Results
   - task: PublishTestResults@2
